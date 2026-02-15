@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentimental - Accueil</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-heart"></i>
+                <span>Sentimental</span>
+            </div>
+            <div class="nav-menu">
+                <a href="#matching" class="nav-link active">Matching</a>
+                <a href="#explore" class="nav-link">Explorer</a>
+                <a href="#profile" class="nav-link">Mon Profil</a>
+                <a href="#" class="nav-link logout" id="logoutBtn">Déconnexion</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <section id="matching" class="section active">
+            <div class="section-header">
+                <h1><i class="fas fa-fire"></i> Découvrez des personnes près de chez vous</h1>
+                <div class="filters">
+                    <select id="matchingDepartment">
+                        <option value="">Tous les départements</option>
+                    </select>
+                    <select id="matchingCity">
+                        <option value="">Toutes les villes</option>
+                    </select>
+                </div>
+            </div>
+            <div class="profiles-grid" id="matchingProfiles"></div>
+        </section>
+
+        <section id="explore" class="section">
+            <div class="section-header">
+                <h1><i class="fas fa-search"></i> Explorer tous les profils</h1>
+                <div class="explore-filters">
+                    <input type="text" id="searchInput" placeholder="Rechercher...">
+                    <select id="exploreDepartment">
+                        <option value="">Département</option>
+                    </select>
+                    <select id="exploreCity">
+                        <option value="">Ville</option>
+                    </select>
+                    <button class="btn btn-primary" id="applyFilters">Appliquer</button>
+                </div>
+            </div>
+            <div class="explore-grid" id="exploreProfiles"></div>
+            <div class="pagination">
+                <button class="btn btn-secondary" id="prevPage">Précédent</button>
+                <span id="pageInfo">Page 1</span>
+                <button class="btn btn-secondary" id="nextPage">Suivant</button>
+            </div>
+        </section>
+
+        <section id="profile" class="section">
+            <div class="profile-container" id="profileContainer">
+                <!-- Chargé dynamiquement -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal de profil détaillé -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div id="modalProfileContent"></div>
+        </div>
+    </div>
+
+    <!-- Modal de validation -->
+    <div id="validationModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Validation Après Rencontre</h2>
+            <div id="validationSteps"></div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

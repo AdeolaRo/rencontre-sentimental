@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentimental - Connexion</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-header">
+            <i class="fas fa-heart"></i>
+            <h1>Sentimental</h1>
+            <p>Rencontres authentiques et sécurisées</p>
+        </div>
+        
+        <div class="login-form">
+            <h2>Connexion</h2>
+            <div class="form-group">
+                <input type="email" id="loginEmail" placeholder="Email" required>
+            </div>
+            <div class="form-group">
+                <input type="password" id="loginPassword" placeholder="Mot de passe" required>
+            </div>
+            <button class="btn btn-primary btn-block" id="loginBtn">Se connecter</button>
+            
+            <div class="divider">
+                <span>ou</span>
+            </div>
+            
+            <button class="btn btn-secondary btn-block" id="showRegisterBtn">Créer un compte</button>
+        </div>
+        
+        <div class="register-form" style="display: none;">
+            <h2>Inscription</h2>
+            <div class="form-group">
+                <input type="email" id="registerEmail" placeholder="Email" required>
+            </div>
+            <div class="form-group">
+                <input type="password" id="registerPassword" placeholder="Mot de passe" required>
+            </div>
+            <div class="form-group">
+                <input type="text" id="firstName" placeholder="Prénom" required>
+            </div>
+            <div class="form-group">
+                <input type="text" id="lastName" placeholder="Nom" required>
+            </div>
+            <div class="form-group">
+                <input type="date" id="birthDate" required>
+            </div>
+            <div class="form-group">
+                <select id="gender" required>
+                    <option value="">Genre</option>
+                    <option value="homme">Homme</option>
+                    <option value="femme">Femme</option>
+                    <option value="autre">Autre</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <input type="text" id="city" placeholder="Ville" required>
+            </div>
+            <div class="form-group">
+                <input type="text" id="department" placeholder="Département" required>
+            </div>
+            <div class="form-group">
+                <input type="text" id="title" placeholder="Titre de votre annonce" required>
+            </div>
+            <div class="form-group">
+                <textarea id="description" placeholder="Description" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <input type="text" id="secretQuestion" placeholder="Question secrète (ex: animal préféré?)" required>
+            </div>
+            <div class="form-group">
+                <input type="text" id="secretAnswer" placeholder="Réponse secrète" required>
+            </div>
+            
+            <button class="btn btn-primary btn-block" id="registerBtn">S'inscrire</button>
+            <button class="btn btn-secondary btn-block" id="showLoginBtn">Déjà un compte ?</button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000/api'; // À adapter selon votre configuration
+
+        // Toggle forms
+        document.getElementById('showRegisterBtn').addEventListener('click', function() {
+            document.querySelector('.login-form').style.display = 'none';
+            document.querySelector('.register-form').style.display = 'block';
+        });
+        document.getElementById('showLoginBtn').addEventListener('click', function() {
+            document.querySelector('.register-form').style.display = 'none';
+            document.querySelector('.login-form').style.display = 'block';
+        });
+
+        // Login
+        document.getElementById('loginBtn').addEventListener('click', async function() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                const res = await fetch(`${API_BASE_URL}/auth/login.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    window.location.href = 'index.html';
+                } else {
+                    alert(data.error || 'Erreur');
+                }
+            } catch(e) {
+                alert('Erreur réseau');
+            }
+        });
+
+        // Register
+        document.getElementById('registerBtn').addEventListener('click', async function() {
+            const userData = {
+                email: document.getElementById('registerEmail').value,
+                password: document.getElementById('registerPassword').value,
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                birthDate: document.getElementById('birthDate').value,
+                gender: document.getElementById('gender').value,
+                city: document.getElementById('city').value,
+                department: document.getElementById('department').value,
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value,
+                secretQuestion: document.getElementById('secretQuestion').value,
+                secretAnswer: document.getElementById('secretAnswer').value,
+                questionnaire: {}
+            };
+            
+            try {
+                const res = await fetch(`${API_BASE_URL}/auth/register.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify({ id: data.userId, email: userData.email, firstName: userData.firstName }));
+                    window.location.href = 'index.html';
+                } else {
+                    alert(data.error || 'Erreur');
+                }
+            } catch(e) {
+                alert('Erreur réseau');
+            }
+        });
+    </script>
+</body>
+</html>
