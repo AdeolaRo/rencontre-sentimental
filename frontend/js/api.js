@@ -72,4 +72,29 @@ class API {
             body: JSON.stringify(data)
         });
     }
+
+    static async getMyMatches() {
+        return this.request('/matches/list.php');
+    }
+    
+    static async acceptMatch(matchId) {
+        return this.request('/matches/accept.php', {
+            method: 'POST',
+            body: JSON.stringify({ matchId })
+        });
+    }
+    
+    static async rejectMatch(matchId) {
+        return this.request('/matches/reject.php', {
+            method: 'POST',
+            body: JSON.stringify({ matchId })
+        });
+    }
+    
+    static async getSecretQuestion(userId) {
+        return this.request(`/encounters/get_secret_question.php?userId=${userId}`);
+    }
+    
+    // La méthode validateEncounter existe déjà, mais on peut s'assurer qu'elle est bien définie
+
 }

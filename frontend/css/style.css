@@ -11,6 +11,8 @@
     --shadow: 0 4px 12px rgba(0,0,0,0.1);
     --transition: all 0.3s ease;
 }
+/* Importation d'une police moderne */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var(--text-color); min-height: 100vh; }
@@ -92,3 +94,96 @@ select:focus, input:focus, textarea:focus { outline: none; border-color: var(--p
 .badges-selection { display: flex; flex-wrap: wrap; gap: 1rem; margin: 1rem 0; }
 .badge-option { padding: 0.75rem 1.5rem; background: white; border: 2px solid var(--secondary-color); border-radius: var(--border-radius); cursor: pointer; transition: var(--transition); }
 .badge-option:hover, .badge-option.selected { background: var(--secondary-color); color: white; }
+
+
+
+body {
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Animation d'apparition des cartes */
+.profile-card {
+    animation: fadeInUp 0.6s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Effet de survol amélioré */
+.profile-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Boutons plus élégants */
+.btn {
+    border-radius: 30px;
+    padding: 0.8rem 2rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #FF6B8B, #FF8A9F);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #FF8A9F, #FF6B8B);
+    box-shadow: 0 7px 14px rgba(255, 107, 139, 0.4);
+}
+
+/* Couleurs plus douces */
+:root {
+    --primary-color: #FF8A9F;
+    --secondary-color: #6EC4B9;
+    --accent-color: #FFD93D;
+    --dark-color: #2F3A4F;
+    --light-color: #F9F9F9;
+}
+
+/* Amélioration du header de profil */
+.profile-header {
+    background: linear-gradient(135deg, #FF8A9F, #6EC4B9);
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+/* Animation des modals */
+.modal-content {
+    animation: slideInDown 0.4s ease;
+}
+
+@keyframes slideInDown {
+    from {
+        transform: translateY(-100px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Style des badges sélectionnables */
+.badge-option {
+    border-radius: 30px;
+    background: white;
+    border: 2px solid var(--secondary-color);
+    padding: 0.5rem 1.2rem;
+    transition: all 0.2s;
+}
+
+.badge-option.selected {
+    background: var(--secondary-color);
+    color: white;
+    transform: scale(1.05);
+}

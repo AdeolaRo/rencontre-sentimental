@@ -6,6 +6,247 @@ document.addEventListener('DOMContentLoaded', function() {
     const navLinks = document.querySelectorAll('.nav-link');
     const logoutBtn = document.getElementById('logoutBtn');
 
+    // ... (code existant, gardez la partie navigation et autres)
+
+// Ajoutez après la déclaration des variables existantes
+const matchesSection = document.getElementById('matches');
+const matchesList = document.getElementById('matchesList');
+
+// Dans la navigation, gérez l'affichage de la section matches
+navLinks.forEach(link => {
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const targetId = this.getAttribute('href').substring(1);
+        navLinks.forEach(l => l.classList.remove('active'));
+        this.classList.add('active');
+        sections.forEach(s => s.classList.remove('active'));
+        document.getElementById(targetId).classList.add('active');
+        
+        if (targetId === 'matching') loadMatchingProfiles();
+        if (targetId === 'explore') loadExploreProfiles(1);
+        if (targetId === 'profile') loadMyProfile();
+        if (targetId === 'matches') loadMatches();
+    });
+});
+
+// Fonction pour charger les matchs
+async function loadMatches() {
+    try {
+        const matches = await API.getMyMatches();
+        displayMatches(matches);
+    } catch (e) {
+        console.error(e);
+        matchesList.innerHTML = '<p class="error">Erreur de chargement</p>';
+    }
+}
+
+function displayMatches(matches) {
+    matchesList.innerHTML = '';
+    if (matches.length === 0) {
+        matchesList.innerHTML = '<p class="text-center">Vous n\'avez pas encore de matchs.</p>';
+        return;
+    }
+    
+    matches.forEach(m => {
+        const card = document.createElement('div');
+        card.className = 'profile-card';
+        card.innerHTML = `
+            <img src="${m.otherPhoto}" alt="${m.otherName}" class="profile-image">
+            <div class="profile-info">
+                <h3 class="profile-name">${m.otherName}</h3>
+                <p class="profile-status">Statut: ${m.status}</p>
+                ${m.status === 'pending' ? `
+                    <div class="profile-actions">
+                        <button class="btn btn-success accept-match" data-match-id="${m.matchId}">Accepter</button>
+                        <button class="btn btn-danger reject-match" data-match-id="${m.matchId}">Refuser</button>
+                    </div>
+                ` : ''}
+                ${m.status === 'accepted' && !m.alreadyValidated && m.canValidate ? `
+                    <button class="btn btn-primary validate-match" data-match-id="${m.matchId}" data-other-id="${m.otherUserId}">Valider la rencontre</button>
+                ` : ''}
+                ${m.alreadyValidated ? '<p class="text-success">Rencontre validée ✓</p>' : ''}
+            </div>
+        `;
+        matchesList.appendChild(card);
+    });
+    
+    // Attacher les événements
+    document.querySelectorAll('.accept-match').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const matchId = btn.dataset.matchId;
+            try {
+                await API.acceptMatch(matchId);
+                alert('Match accepté !');
+                loadMatches(); // Recharger
+            } catch (err) {
+                alert(err.message);
+            }
+        });
+    });
+    
+    document.querySelectorAll('.reject-match').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const matchId = btn.dataset.matchId;
+            if (confirm('Voulez-vous vraiment refuser ce match ?')) {
+                try {
+                    await API.rejectMatch(matchId);
+                    alert('Match refusé');
+                    loadMatches();
+                } catch (err) {
+                    alert(err.message);
+                }
+            }
+        });
+    });
+    
+    document.querySelectorAll('.validate-match').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const matchId = btn.dataset.matchId;
+            const otherId = btn.dataset.otherId;
+            openValidationModal(matchId, otherId);
+        });
+    });
+}
+
+// Modal de validation en 3 étapes
+let currentMatchId, currentOtherId;
+
+async function openValidationModal(matchId, otherId) {
+    currentMatchId = matchId;
+    currentOtherId = otherId;
+    
+    // Récupérer la question secrète
+    try {
+        const data = await API.getSecretQuestion(otherId);
+        const question = data.secretQuestion;
+        
+        // Construire le HTML du modal
+        const modal = document.getElementById('validationModal');
+        const stepsDiv = document.getElementById('validationSteps');
+        stepsDiv.innerHTML = `
+            <div class="step active" id="step1">
+                <h3>Étape 1 : Confirmer la rencontre</h3>
+                <p>Avez-vous rencontré cette personne en vrai ?</p>
+                <div class="step-options">
+                    <button class="btn btn-success" id="confirmYes">Oui</button>
+                    <button class="btn btn-danger" id="confirmNo">Non</button>
+                </div>
+            </div>
+            <div class="step" id="step2">
+                <h3>Étape 2 : Question secrète</h3>
+                <p><strong>Question :</strong> ${question}</p>
+                <input type="text" id="secretAnswer" placeholder="Votre réponse" class="form-control">
+                <button class="btn btn-primary" id="submitSecret">Valider</button>
+            </div>
+            <div class="step" id="step3">
+                <h3>Étape 3 : Badges comportementaux</h3>
+                <p>Sélectionnez jusqu'à 3 badges :</p>
+                <div class="badges-selection" id="badgesSelection"></div>
+                <button class="btn btn-success" id="submitValidation">Terminer</button>
+            </div>
+        `;
+        
+        // Initialiser les badges
+        const badgesContainer = document.getElementById('badgesSelection');
+        const badgesList = [
+            'Respectueux(se)',
+            'Communication naturelle',
+            'Ponctuel(le)',
+            'Conflant/Apaisant',
+            'Correspond au CV sentimental',
+            'Relationnel fluide',
+            'Bonne énergie'
+        ];
+        badgesContainer.innerHTML = badgesList.map(b => `
+            <div class="badge-option" data-badge="${b}">${b}</div>
+        `).join('');
+        
+        // Variables d'état
+        let hasMet = false;
+        let selectedBadges = [];
+        
+        // Gestion étape 1
+        document.getElementById('confirmYes').addEventListener('click', () => {
+            hasMet = true;
+            document.getElementById('step1').classList.remove('active');
+            document.getElementById('step2').classList.add('active');
+        });
+        document.getElementById('confirmNo').addEventListener('click', () => {
+            hasMet = false;
+            // Si non, on peut directement soumettre sans badges
+            submitValidation(false, []);
+        });
+        
+        // Gestion étape 2
+        document.getElementById('submitSecret').addEventListener('click', () => {
+            const answer = document.getElementById('secretAnswer').value.trim();
+            if (!answer) {
+                alert('Veuillez entrer une réponse');
+                return;
+            }
+            // On stocke la réponse pour l'étape 3
+            window.tempSecretAnswer = answer;
+            document.getElementById('step2').classList.remove('active');
+            document.getElementById('step3').classList.add('active');
+        });
+        
+        // Sélection des badges
+        badgesContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('badge-option')) {
+                const badge = e.target.dataset.badge;
+                if (selectedBadges.includes(badge)) {
+                    selectedBadges = selectedBadges.filter(b => b !== badge);
+                    e.target.classList.remove('selected');
+                } else if (selectedBadges.length < 3) {
+                    selectedBadges.push(badge);
+                    e.target.classList.add('selected');
+                }
+            }
+        });
+        
+        // Soumission finale
+        document.getElementById('submitValidation').addEventListener('click', async () => {
+            await submitValidation(hasMet, selectedBadges, window.tempSecretAnswer);
+        });
+        
+        modal.style.display = 'block';
+    } catch (e) {
+        alert('Erreur : ' + e.message);
+    }
+}
+
+async function submitValidation(hasMet, badges, secretAnswer) {
+    try {
+        const data = {
+            matchId: currentMatchId,
+            hasMet: hasMet,
+            secretAnswer: secretAnswer || '',
+            badges: badges
+        };
+        const result = await API.validateEncounter(data);
+        alert('Validation enregistrée !');
+        document.getElementById('validationModal').style.display = 'none';
+        loadMatches(); // Recharger la liste des matchs
+    } catch (e) {
+        alert('Erreur : ' + e.message);
+    }
+}
+
+// Fermer le modal
+document.querySelectorAll('.close-modal').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.getElementById('validationModal').style.display = 'none';
+    });
+});
+window.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal')) {
+        e.target.style.display = 'none';
+    }
+});
+
     // Navigation
     navLinks.forEach(link => {
         link.addEventListener('click', function(e) {
