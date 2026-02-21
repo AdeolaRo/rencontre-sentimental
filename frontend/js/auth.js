@@ -10,25 +10,12 @@ class Auth {
 
     static async login(email, password) {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/login`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ email, password })
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('user', JSON.stringify(data.user));
-                return { success: true, data };
-            } else {
-                const error = await response.json();
-                return { success: false, error: error.error };
-            }
+            const data = await API.login(email, password);
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            return { success: true, data };
         } catch (error) {
-            return { success: false, error: 'Erreur de connexion au serveur' };
+            return { success: false, error: error.message };
         }
     }
 

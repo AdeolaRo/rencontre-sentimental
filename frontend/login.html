@@ -61,7 +61,7 @@
                 <input type="text" id="city" placeholder="Ville" required>
             </div>
             <div class="form-group">
-                <input type="text" id="department" placeholder="Département" required>
+                <input type="text" id="department" placeholder="Département (ex: 75)" required>
             </div>
             <div class="form-group">
                 <input type="text" id="title" placeholder="Titre de votre annonce" required>
@@ -81,9 +81,9 @@
         </div>
     </div>
 
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
     <script>
-        const API_BASE_URL = 'http://localhost:8000/api'; // À adapter selon votre configuration
-
         // Toggle forms
         document.getElementById('showRegisterBtn').addEventListener('click', function() {
             document.querySelector('.login-form').style.display = 'none';
@@ -99,22 +99,11 @@
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
             
-            try {
-                const res = await fetch(`${API_BASE_URL}/auth/login.php`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('user', JSON.stringify(data.user));
-                    window.location.href = 'index.html';
-                } else {
-                    alert(data.error || 'Erreur');
-                }
-            } catch(e) {
-                alert('Erreur réseau');
+            const result = await Auth.login(email, password);
+            if (result.success) {
+                window.location.href = 'index.html';
+            } else {
+                alert(result.error);
             }
         });
 
@@ -133,25 +122,25 @@
                 description: document.getElementById('description').value,
                 secretQuestion: document.getElementById('secretQuestion').value,
                 secretAnswer: document.getElementById('secretAnswer').value,
-                questionnaire: {}
+                // Champs optionnels, on peut les laisser vides
+                emploi: '',
+                looking_for: 'rencontres',
+                taille: '',
+                enfant: 'non',
+                alcool: 'occasionnellement',
+                cigarette: 'jamais',
+                sexualite: '',
+                animaux: '',
+                centre_interet: ''
             };
             
             try {
-                const res = await fetch(`${API_BASE_URL}/auth/register.php`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(userData)
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('user', JSON.stringify({ id: data.userId, email: userData.email, firstName: userData.firstName }));
-                    window.location.href = 'index.html';
-                } else {
-                    alert(data.error || 'Erreur');
-                }
-            } catch(e) {
-                alert('Erreur réseau');
+                const data = await API.register(userData);
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify({ id: data.userId, email: userData.email, firstName: userData.firstName }));
+                window.location.href = 'index.html';
+            } catch (e) {
+                alert(e.message);
             }
         });
     </script>
