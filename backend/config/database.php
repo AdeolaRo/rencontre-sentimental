@@ -1,4 +1,8 @@
 <?php
+// Désactiver l'affichage des erreurs pour la production
+error_reporting(0);
+ini_set('display_errors', 0);
+
 class Database {
     private $host = "localhost";
     private $db_name = "rencontre_sentimental";

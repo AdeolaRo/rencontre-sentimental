@@ -84,6 +84,53 @@
     <script src="js/config.js"></script>
     <script src="js/api.js"></script>
     <script>
+        // Fonction de notification
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                border-radius: 8px;
+                background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+                color: white;
+                font-weight: 500;
+                z-index: 1000;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s;
+                animation-fill-mode: forwards;
+            `;
+            
+            // Ajouter les animations CSS si elles n'existent pas déjà
+            if (!document.querySelector('#notification-styles')) {
+                const style = document.createElement('style');
+                style.id = 'notification-styles';
+                style.textContent = `
+                    @keyframes slideIn {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                    @keyframes fadeOut {
+                        from { opacity: 1; }
+                        to { opacity: 0; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            document.body.appendChild(notification);
+            
+            // Supprimer après 3 secondes
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 3000);
+        }
+
         // Toggle forms
         document.getElementById('showRegisterBtn').addEventListener('click', function() {
             document.querySelector('.login-form').style.display = 'none';
@@ -103,7 +150,7 @@
             if (result.success) {
                 window.location.href = 'index.html';
             } else {
-                alert(result.error);
+                showNotification(result.error, 'error');
             }
         });
 
@@ -140,7 +187,7 @@
                 localStorage.setItem('user', JSON.stringify({ id: data.userId, email: userData.email, firstName: userData.firstName }));
                 window.location.href = 'index.html';
             } catch (e) {
-                alert(e.message);
+                showNotification(e.message, 'error');
             }
         });
     </script>

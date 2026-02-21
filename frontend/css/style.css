@@ -30,6 +30,7 @@ body {
     line-height: 1.6;
 }
 
+/* Navbar */
 .navbar {
     background: rgba(255,255,255,0.8);
     backdrop-filter: blur(12px);
@@ -89,6 +90,7 @@ body {
     color: #ef4444;
 }
 
+/* Main content */
 .main-content {
     max-width: 1280px;
     margin: 2rem auto;
@@ -114,6 +116,7 @@ body {
     color: var(--text);
 }
 
+/* Filtres */
 .filters, .explore-filters {
     display: flex;
     gap: 1rem;
@@ -135,22 +138,27 @@ body {
     min-width: 250px;
 }
 
+/* Grilles de profils - 4 cartes par ligne */
 .profiles-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
     margin-top: 2rem;
 }
 
+/* Carte de profil */
 .profile-card {
     background: var(--card-bg);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     overflow: hidden;
     box-shadow: var(--shadow);
     transition: transform 0.2s, box-shadow 0.2s;
     cursor: pointer;
     border: 1px solid var(--border);
     position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .profile-card:hover {
@@ -158,56 +166,85 @@ body {
     box-shadow: var(--shadow-lg);
 }
 
+/* Photo de profil réduite pour mieux tenir dans la carte */
 .profile-image {
     width: 100%;
-    height: 280px;
+    height: 180px; /* Réduit de 280px à 180px */
     object-fit: cover;
 }
 
 .profile-score {
     position: absolute;
-    top: 1rem;
-    right: 1rem;
+    top: 0.75rem;
+    right: 0.75rem;
     background: var(--accent);
     color: white;
     padding: 0.25rem 0.75rem;
     border-radius: 9999px;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 600;
     box-shadow: var(--shadow);
 }
 
 .profile-info {
-    padding: 1.5rem;
+    padding: 1rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .profile-name {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     font-weight: 600;
     margin-bottom: 0.25rem;
+    color: var(--text);
 }
 
 .profile-location {
     color: var(--text-light);
-    font-size: 0.9rem;
-    margin-bottom: 0.75rem;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
     display: flex;
     align-items: center;
     gap: 0.25rem;
 }
 
 .profile-title {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     color: var(--text-light);
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+}
+
+.profile-status {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-bottom: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    background: var(--bg);
+    border-radius: 0.5rem;
+    display: inline-block;
 }
 
 .profile-actions {
     display: flex;
     gap: 0.5rem;
-    margin-top: 1rem;
+    margin-top: auto;
+    flex-wrap: wrap;
 }
 
+/* Badge pour rencontre validée */
+.badge {
+    background: var(--secondary);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: inline-block;
+}
+
+/* Boutons */
 .btn {
     padding: 0.6rem 1.2rem;
     border: none;
@@ -223,6 +260,15 @@ body {
     background: white;
     color: var(--text);
     border: 1px solid var(--border);
+}
+
+.btn-sm {
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
+}
+
+.text-center {
+    text-align: center;
 }
 
 .btn-primary {
@@ -262,6 +308,7 @@ body {
     width: 100%;
 }
 
+/* Modals */
 .modal {
     display: none;
     position: fixed;
@@ -285,6 +332,7 @@ body {
     box-shadow: var(--shadow-lg);
     animation: fadeIn 0.3s;
     position: relative;
+    margin: auto;
 }
 
 @keyframes fadeIn {
@@ -306,16 +354,17 @@ body {
     color: var(--text);
 }
 
+/* Galerie photos */
 .gallery {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: 0.75rem;
     margin: 1rem 0;
 }
 
 .gallery img {
     width: 100%;
-    height: 120px;
+    height: 100px;
     object-fit: cover;
     border-radius: 0.75rem;
     cursor: pointer;
@@ -326,6 +375,7 @@ body {
     transform: scale(1.05);
 }
 
+/* Badges */
 .badge-option {
     display: inline-block;
     padding: 0.5rem 1rem;
@@ -341,7 +391,7 @@ body {
     color: white;
 }
 
-/* Profil header */
+/* ===== PAGE MON PROFIL AMÉLIORÉE ===== */
 .profile-header {
     display: flex;
     gap: 2rem;
@@ -359,6 +409,7 @@ body {
     border-radius: 50%;
     border: 4px solid white;
     object-fit: cover;
+    box-shadow: var(--shadow-lg);
 }
 
 .profile-header .profile-info h1 {
@@ -377,14 +428,15 @@ body {
     margin-top: 1rem;
 }
 
-.badge {
+.badge-profile {
     background: rgba(255,255,255,0.2);
     padding: 0.25rem 1rem;
     border-radius: 9999px;
     font-size: 0.9rem;
+    backdrop-filter: blur(4px);
 }
 
-.badge.verified {
+.badge-profile.verified {
     background: var(--accent);
 }
 
@@ -392,33 +444,75 @@ body {
     padding: 0 2rem 2rem;
 }
 
+/* Sections du profil sous forme de cartes */
 .profile-edit-section {
     background: var(--card-bg);
     border-radius: var(--radius-sm);
     padding: 1.5rem;
     margin-bottom: 1.5rem;
     border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.2s;
+}
+
+.profile-edit-section:hover {
+    box-shadow: var(--shadow-lg);
 }
 
 .profile-edit-section h3 {
     margin-bottom: 1rem;
     color: var(--primary);
+    font-size: 1.3rem;
+    border-bottom: 2px solid var(--primary-light);
+    padding-bottom: 0.5rem;
 }
 
-.form-group {
+.profile-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.profile-details p {
+    margin: 0.5rem 0;
+    font-size: 0.95rem;
+}
+
+.profile-details strong {
+    color: var(--text);
+    font-weight: 600;
+}
+
+/* Formulaire d'édition du profil (dans la modale) */
+#editProfileForm {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+#editProfileForm .profile-edit-section {
+    margin-bottom: 0;
+}
+
+#editProfileForm .form-group {
     margin-bottom: 1rem;
 }
 
-.form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
+#editProfileForm label {
     font-weight: 500;
     color: var(--text);
+    margin-bottom: 0.25rem;
+    display: block;
 }
 
-input, select, textarea {
+#editProfileForm input[type="text"],
+#editProfileForm input[type="email"],
+#editProfileForm input[type="password"],
+#editProfileForm input[type="date"],
+#editProfileForm select,
+#editProfileForm textarea {
     width: 100%;
-    padding: 0.75rem 1rem;
+    padding: 0.75rem;
     border: 1px solid var(--border);
     border-radius: 0.75rem;
     font-size: 1rem;
@@ -426,17 +520,21 @@ input, select, textarea {
     background: white;
 }
 
-input:focus, select:focus, textarea:focus {
+#editProfileForm input:focus,
+#editProfileForm select:focus,
+#editProfileForm textarea:focus {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
 }
 
-textarea {
-    resize: vertical;
-    min-height: 100px;
+/* Bouton de modification */
+#editProfileBtn {
+    margin-top: 1rem;
+    width: 100%;
 }
 
+/* Pagination */
 .pagination {
     display: flex;
     justify-content: center;
@@ -517,18 +615,61 @@ textarea {
 }
 
 /* Responsive */
+@media (max-width: 768px) {
+    .profiles-grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
+    
+    .profile-image {
+        height: 150px;
+    }
+}
+
 @media (max-width: 640px) {
     .profile-header {
         flex-direction: column;
         text-align: center;
     }
+    
     .nav-menu {
         display: none; /* À remplacer par un menu burger si besoin */
     }
+    
     .explore-filters {
         flex-direction: column;
     }
+    
     .filter-select, .search-input {
         width: 100%;
+    }
+    
+    .profile-details {
+        grid-template-columns: 1fr;
+    }
+    
+    .profiles-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+    
+    .profile-image {
+        height: 130px;
+    }
+    
+    .profile-actions {
+        flex-direction: column;
+    }
+    
+    .profile-actions .btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .profiles-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .profile-image {
+        height: 200px;
     }
 }

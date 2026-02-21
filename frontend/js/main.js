@@ -5,6 +5,114 @@ document.addEventListener('DOMContentLoaded', async function() {
         return;
     }
 
+    // Fonction de notification discrète
+    function showNotification(message, type = 'success') {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s;
+            animation-fill-mode: forwards;
+        `;
+        
+        // Ajouter les animations CSS si elles n'existent pas déjà
+        if (!document.querySelector('#notification-styles')) {
+            const style = document.createElement('style');
+            style.id = 'notification-styles';
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes fadeOut {
+                    from { opacity: 1; }
+                    to { opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(notification);
+        
+        // Supprimer après 3 secondes
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 3000);
+    }
+
+    // Fonction de confirmation modale
+    function showConfirm(message) {
+        return new Promise((resolve) => {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.5);
+                backdrop-filter: blur(4px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+            `;
+            
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: white;
+                border-radius: var(--radius);
+                padding: 2rem;
+                max-width: 400px;
+                width: 90%;
+                box-shadow: var(--shadow-lg);
+                animation: fadeIn 0.3s;
+            `;
+            
+            content.innerHTML = `
+                <h3 style="margin-bottom: 1rem; color: var(--text);">Confirmation</h3>
+                <p style="margin-bottom: 1.5rem; color: var(--text-light);">${message}</p>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button class="btn btn-secondary" id="confirmCancel">Annuler</button>
+                    <button class="btn btn-danger" id="confirmOk">Confirmer</button>
+                </div>
+            `;
+            
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+            
+            // Gérer les clics
+            document.getElementById('confirmCancel').addEventListener('click', () => {
+                document.body.removeChild(modal);
+                resolve(false);
+            });
+            
+            document.getElementById('confirmOk').addEventListener('click', () => {
+                document.body.removeChild(modal);
+                resolve(true);
+            });
+            
+            // Fermer en cliquant en dehors
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    document.body.removeChild(modal);
+                    resolve(false);
+                }
+            });
+        });
+    }
+
+    // Éléments DOM
+
     // Éléments DOM
     const sections = document.querySelectorAll('.section');
     const navLinks = document.querySelectorAll('.nav-link');
@@ -143,6 +251,13 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
 
+    // Fonction utilitaire pour recharger la section active
+    function reloadCurrentSection() {
+        const activeId = document.querySelector('.section.active').id;
+        if (activeId === 'matching') loadMatchingProfiles();
+        else if (activeId === 'explore') loadExploreProfiles(currentExplorePage);
+    }
+
     function displayProfiles(profiles, container, showMatchBtn) {
         container.innerHTML = '';
         if (profiles.length === 0) {
@@ -152,8 +267,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         profiles.forEach(p => {
             const card = document.createElement('div');
             card.className = 'profile-card';
+            card.style.cursor = 'pointer'; // Rendre le curseur en forme de main
+            card.dataset.id = p.id; // Stocker l'ID dans la carte
             card.innerHTML = `
-                <img src="${p.main_photo || 'uploads/default-avatar.jpg'}" alt="${p.first_name}" class="profile-image">
+                <img src="${API.getPhotoUrl(p.main_photo)}" alt="${p.first_name}" class="profile-image">
                 <div class="profile-score">${p.profile_score || 0} pts</div>
                 <div class="profile-info">
                     <h3 class="profile-name">${p.first_name} ${p.last_name}</h3>
@@ -166,6 +283,14 @@ document.addEventListener('DOMContentLoaded', async function() {
                 </div>
             `;
             container.appendChild(card);
+            
+            // Rendre toute la carte cliquable
+            card.addEventListener('click', (e) => {
+                // Ne pas déclencher si on clique sur un bouton
+                if (!e.target.closest('.profile-actions')) {
+                    openProfileModal(p.id);
+                }
+            });
         });
 
         // Attacher événements
@@ -177,16 +302,16 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
         if (showMatchBtn) {
             container.querySelectorAll('.match-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    e.stopPropagation();
-                    try {
-                        await API.createMatch(btn.dataset.id);
-                        alert('Match envoyé !');
-                        btn.disabled = true;
-                    } catch (err) {
-                        alert(err.message);
-                    }
-                });
+                        btn.addEventListener('click', async (e) => {
+                            e.stopPropagation();
+                            try {
+                                await API.createMatch(btn.dataset.id);
+                                showNotification('Match envoyé !');
+                                btn.disabled = true;
+                            } catch (err) {
+                                showNotification(err.message, 'error');
+                            }
+                        });
             });
         }
     }
@@ -199,7 +324,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             // Pour simplifier, on ne gère pas ici
             content.innerHTML = `
                 <div class="modal-profile-header" style="display: flex; gap: 2rem; align-items: center; margin-bottom: 2rem;">
-                    <img src="${data.photos[0]?.photo_url || 'uploads/default-avatar.jpg'}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
+                    <img src="${API.getPhotoUrl(data.photos[0]?.photo_url)}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
                     <div>
                         <h2>${data.user.first_name} ${data.user.last_name}</h2>
                         <p><i class="fas fa-map-marker-alt"></i> ${data.user.city}, ${data.user.department}</p>
@@ -212,7 +337,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                     
                     <h3>Photos</h3>
                     <div class="gallery">
-                        ${data.photos.map(ph => `<img src="${ph.photo_url}" alt="Photo">`).join('')}
+                        ${data.photos.map(ph => `<img src="${API.getPhotoUrl(ph.photo_url)}" alt="Photo">`).join('')}
                     </div>
                     
                     <h3>Détails</h3>
@@ -257,25 +382,27 @@ document.addEventListener('DOMContentLoaded', async function() {
             document.getElementById('likeFromModal').addEventListener('click', async () => {
                 try {
                     await API.likeUser(userId);
-                    alert('Like enregistré');
+                    showNotification('Like enregistré');
                     document.getElementById('profileModal').style.display = 'none';
+                    reloadCurrentSection();
                 } catch (err) {
-                    alert(err.message);
+                    showNotification(err.message, 'error');
                 }
             });
             document.getElementById('dislikeFromModal').addEventListener('click', async () => {
                 try {
                     await API.dislikeUser(userId);
-                    alert('Dislike enregistré');
+                    showNotification('Dislike enregistré');
                     document.getElementById('profileModal').style.display = 'none';
+                    reloadCurrentSection();
                 } catch (err) {
-                    alert(err.message);
+                    showNotification(err.message, 'error');
                 }
             });
             document.getElementById('validateFromModal').addEventListener('click', () => {
                 document.getElementById('profileModal').style.display = 'none';
                 // Ouvrir le modal de validation avec l'ID de l'autre utilisateur (mais il faut un matchId)
-                alert('Fonctionnalité à implémenter : besoin du matchId');
+                showNotification('Fonctionnalité à implémenter : besoin du matchId', 'info');
             });
         } catch (e) {
             console.error(e);
@@ -302,37 +429,46 @@ document.addEventListener('DOMContentLoaded', async function() {
         matches.forEach(m => {
             const card = document.createElement('div');
             card.className = 'profile-card';
+            card.dataset.userId = m.otherUserId; // pour ouvrir le profil
             card.innerHTML = `
-                <img src="${m.otherPhoto}" alt="${m.otherName}" class="profile-image">
+                <img src="${API.getPhotoUrl(m.otherPhoto)}" alt="${m.otherName}" class="profile-image">
                 <div class="profile-info">
                     <h3 class="profile-name">${m.otherName}</h3>
                     <p class="profile-status">Statut: ${m.status}</p>
-                    ${m.status === 'pending' ? `
-                        <div class="profile-actions">
+                    <div class="profile-actions">
+                        ${m.status === 'pending' ? `
                             <button class="btn btn-success accept-match" data-match-id="${m.matchId}">Accepter</button>
                             <button class="btn btn-danger reject-match" data-match-id="${m.matchId}">Refuser</button>
-                        </div>
-                    ` : ''}
-                    ${m.status === 'accepted' && !m.alreadyValidated && m.canValidate ? `
-                        <button class="btn btn-primary validate-match" data-match-id="${m.matchId}" data-other-id="${m.otherUserId}">Valider la rencontre</button>
-                    ` : ''}
-                    ${m.alreadyValidated ? '<p class="text-success">Rencontre validée ✓</p>' : ''}
+                        ` : ''}
+                        ${m.status === 'accepted' && !m.alreadyValidated && m.canValidate ? `
+                            <button class="btn btn-primary validate-match" data-match-id="${m.matchId}" data-other-id="${m.otherUserId}">Valider la rencontre</button>
+                        ` : ''}
+                        ${m.alreadyValidated ? '<span class="badge">Rencontre validée ✓</span>' : ''}
+                    </div>
                 </div>
             `;
+            
+            // Ouvrir le profil au clic sur la carte (sauf si on clique sur un bouton)
+            card.addEventListener('click', (e) => {
+                if (!e.target.classList.contains('btn')) {
+                    openProfileModal(m.otherUserId);
+                }
+            });
+            
             matchesList.appendChild(card);
         });
-        
-        // Attacher les événements
+
+        // Attacher les événements aux boutons (comme avant)
         document.querySelectorAll('.accept-match').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
                 const matchId = btn.dataset.matchId;
                 try {
                     await API.acceptMatch(matchId);
-                    alert('Match accepté !');
+                    showNotification('Match accepté !');
                     loadMatches();
                 } catch (err) {
-                    alert(err.message);
+                    showNotification(err.message, 'error');
                 }
             });
         });
@@ -341,13 +477,14 @@ document.addEventListener('DOMContentLoaded', async function() {
             btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
                 const matchId = btn.dataset.matchId;
-                if (confirm('Voulez-vous vraiment refuser ce match ?')) {
+                const confirmed = await showConfirm('Voulez-vous vraiment refuser ce match ?');
+                if (confirmed) {
                     try {
                         await API.rejectMatch(matchId);
-                        alert('Match refusé');
+                        showNotification('Match refusé');
                         loadMatches();
                     } catch (err) {
-                        alert(err.message);
+                        showNotification(err.message, 'error');
                     }
                 }
             });
@@ -377,7 +514,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         profileContainer.innerHTML = `
             <div class="profile-header">
                 <div class="profile-avatar">
-                    <img src="${data.photos.find(p => p.is_main)?.photo_url || 'uploads/default-avatar.jpg'}" alt="Photo">
+                    <img src="${API.getPhotoUrl(data.photos.find(p => p.is_main)?.photo_url)}" alt="Photo">
                 </div>
                 <div class="profile-info">
                     <h1>${data.user.first_name} ${data.user.last_name}</h1>
@@ -385,8 +522,8 @@ document.addEventListener('DOMContentLoaded', async function() {
                     <h2>${data.user.title}</h2>
                     <p>${data.user.description || ''}</p>
                     <div class="profile-badges">
-                        <span class="badge">Score: ${data.user.profile_score}</span>
-                        ${data.user.is_verified ? '<span class="badge verified">Vérifié</span>' : ''}
+                        <span class="badge-profile">Score: ${data.user.profile_score}</span>
+                        ${data.user.is_verified ? '<span class="badge-profile verified">Vérifié</span>' : ''}
                     </div>
                 </div>
             </div>
@@ -394,7 +531,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 <div class="photos-gallery profile-edit-section">
                     <h3>Mes photos (max 8)</h3>
                     <div class="gallery" id="myPhotoGallery">
-                        ${data.photos.map(ph => `<img src="${ph.photo_url}" alt="Photo">`).join('')}
+                        ${data.photos.map(ph => `<img src="${API.getPhotoUrl(ph.photo_url)}" alt="Photo">`).join('')}
                     </div>
                     <input type="file" id="photoUpload" accept="image/*">
                     <button class="btn btn-secondary" id="uploadPhotoBtn">Ajouter une photo</button>
@@ -417,7 +554,9 @@ document.addEventListener('DOMContentLoaded', async function() {
                         <p><strong>Musique:</strong> ${data.user.music_tastes || 'Non renseigné'}</p>
                         <p><strong>Style:</strong> ${data.user.style || 'Non renseigné'}</p>
                     </div>
-                    <button class="btn btn-primary" id="editProfileBtn">Modifier mon profil</button>
+                    <div style="text-align: center; margin-top: 1rem;">
+                        <button class="btn btn-primary btn-sm" id="editProfileBtn">Modifier mon profil</button>
+                    </div>
                 </div>
             </div>
         `;
@@ -428,16 +567,19 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     async function uploadPhoto() {
         const fileInput = document.getElementById('photoUpload');
-        if (!fileInput.files[0]) return alert('Sélectionnez une photo');
+        if (!fileInput.files[0]) {
+            showNotification('Sélectionnez une photo', 'info');
+            return;
+        }
         const formData = new FormData();
         formData.append('photo', fileInput.files[0]);
         formData.append('isMain', 'false');
         try {
             await API.uploadPhoto(formData);
-            alert('Photo ajoutée');
+            showNotification('Photo ajoutée');
             loadMyProfile();
         } catch (e) {
-            alert(e.message);
+            showNotification(e.message, 'error');
         }
     }
 
@@ -488,8 +630,9 @@ document.addEventListener('DOMContentLoaded', async function() {
                     <select name="personality">${refs.personnalites.map(p => `<option value="${p}" ${data.user.personality == p ? 'selected' : ''}>${p}</option>`).join('')}</select>
                 </div>
                 <div class="form-group"><label>Passions</label><input type="text" name="passions" value="${data.user.passions || ''}"></div>
-                <div class="form-group"><label>Musique (5 max)</label>
-                    <select name="music_tastes" multiple size="5">${refs.musiques.map(m => `<option value="${m}" ${(data.user.music_tastes || '').includes(m) ? 'selected' : ''}>${m}</option>`).join('')}</select>
+                <div class="form-group">
+                    <label>Musique</label>
+                    <input type="text" name="music_tastes" value="${data.user.music_tastes || ''}" placeholder="Vos genres musicaux préférés">
                 </div>
                 <div class="form-group"><label>Style</label>
                     <select name="style">${refs.styles.map(s => `<option value="${s}" ${data.user.style == s ? 'selected' : ''}>${s}</option>`).join('')}</select>
@@ -521,11 +664,11 @@ document.addEventListener('DOMContentLoaded', async function() {
             delete data.animaux_autre;
             try {
                 await API.updateProfile(data);
-                alert('Profil mis à jour');
+                showNotification('Profil mis à jour');
                 modal.style.display = 'none';
                 loadMyProfile();
             } catch (err) {
-                alert(err.message);
+                showNotification(err.message, 'error');
             }
         };
 

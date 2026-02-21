@@ -1,6 +1,53 @@
 // frontend/js/validation.js
 let currentMatchId, currentOtherId;
 
+// Fonction de notification (identique à celle dans main.js)
+function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+        color: white;
+        font-weight: 500;
+        z-index: 1000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s;
+        animation-fill-mode: forwards;
+    `;
+    
+    // Ajouter les animations CSS si elles n'existent pas déjà
+    if (!document.querySelector('#notification-styles')) {
+        const style = document.createElement('style');
+        style.id = 'notification-styles';
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes fadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(notification);
+    
+    // Supprimer après 3 secondes
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 3000);
+}
+
 async function openValidationModal(matchId, otherId) {
     currentMatchId = matchId;
     currentOtherId = otherId;
@@ -69,7 +116,7 @@ async function openValidationModal(matchId, otherId) {
         document.getElementById('submitSecret').addEventListener('click', () => {
             secretAnswer = document.getElementById('secretAnswer').value.trim();
             if (!secretAnswer) {
-                alert('Veuillez entrer une réponse');
+                showNotification('Veuillez entrer une réponse', 'info');
                 return;
             }
             document.getElementById('step2').style.display = 'none';
@@ -97,7 +144,7 @@ async function openValidationModal(matchId, otherId) {
         
         modal.style.display = 'flex';
     } catch (e) {
-        alert('Erreur : ' + e.message);
+        showNotification('Erreur : ' + e.message, 'error');
     }
 }
 
@@ -110,11 +157,11 @@ async function submitValidation(hasMet, badges, secretAnswer) {
             badges: badges
         };
         const result = await API.validateEncounter(data);
-        alert('Validation enregistrée !');
+        showNotification('Validation enregistrée !');
         document.getElementById('validationModal').style.display = 'none';
         // Recharger les matchs
         if (typeof loadMatches === 'function') loadMatches();
     } catch (e) {
-        alert('Erreur : ' + e.message);
+        showNotification('Erreur : ' + e.message, 'error');
     }
 }

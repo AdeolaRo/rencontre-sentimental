@@ -1,11 +1,14 @@
 <?php
 // backend/config/functions.php
+// Désactiver l'affichage des erreurs pour la production
+error_reporting(0);
+ini_set('display_errors', 0);
 
 class Database {
-    private $host = 'localhost';
+    private $host = 'sentimental_db'; // Nom du service Docker
     private $dbname = 'rencontre_sentimental';
-    private $user = 'root';
-    private $pass = '';
+    private $user = 'sentimental_user'; // Utilisateur créé dans Docker Compose
+    private $pass = 'sentimental_pass'; // Mot de passe de l'utilisateur
     private $pdo;
 
     public function getConnection() {
@@ -44,7 +47,8 @@ function getUserFromToken() {
 }
 
 function uploadPhoto($file, $userId) {
-    $targetDir = "../../uploads/";
+    // Use absolute path to the project root uploads directory
+    $targetDir = dirname(__DIR__, 2) . '/uploads/';
     if (!is_dir($targetDir)) mkdir($targetDir, 0777, true);
     $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
     $filename = uniqid() . "_" . $userId . "." . $extension;
@@ -52,6 +56,6 @@ function uploadPhoto($file, $userId) {
     if (move_uploaded_file($file['tmp_name'], $targetFile)) {
         return ['success' => true, 'path' => 'uploads/' . $filename];
     }
-    return ['success' => false, 'error' => 'Erreur upload'];
+    return ['success' => false, 'error' => 'Erreur upload: ' . error_get_last()['message']];
 }
 ?>

@@ -17,11 +17,13 @@ switch ($_SERVER['REQUEST_METHOD']) {
             $department = $_GET['department'] ?? null;
             $city = $_GET['city'] ?? null;
             
-            $sql = "SELECT u.*, up.photo_url as main_photo, COUNT(DISTINCT pmv.id) as validation_count
-                    FROM users u
-                    LEFT JOIN user_photos up ON u.id = up.user_id AND up.is_main = 1
-                    LEFT JOIN post_meeting_validations pmv ON u.id = pmv.validated_user_id
-                    WHERE u.id != :uid
+            $sql = "SELECT u.*, 
+                    MAX(up.photo_url) as main_photo, 
+                    COUNT(DISTINCT pmv.id) as validation_count 
+                    FROM users u 
+                    LEFT JOIN user_photos up ON u.id = up.user_id AND up.is_main = 1 
+                    LEFT JOIN post_meeting_validations pmv ON u.id = pmv.validated_user_id 
+                    WHERE u.id != :uid 
                     AND NOT EXISTS (SELECT 1 FROM matches m WHERE (m.user1_id = :uid AND m.user2_id = u.id) OR (m.user2_id = :uid AND m.user1_id = u.id))";
             $params = ['uid' => $user['id']];
             if ($department) { $sql .= " AND u.department = :dept"; $params['dept'] = $department; }

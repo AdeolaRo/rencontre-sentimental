@@ -148,4 +148,13 @@ class API {
         }
         return this.request(url);
     }
+
+    // Helper pour obtenir l'URL complète d'une photo
+    static getPhotoUrl(relativePath) {
+        if (!relativePath) return 'uploads/default-avatar.jpg';
+        // API_BASE_URL = 'http://localhost:8080/backend/api'
+        // Nous voulons 'http://localhost:8080/uploads/filename'
+        const base = API_BASE_URL.replace('/backend/api', '');
+        return base + '/' + relativePath;
+    }
 }

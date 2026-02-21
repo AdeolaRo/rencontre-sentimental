@@ -1,4 +1,8 @@
 <?php
+// Désactiver l'affichage des erreurs pour la production
+error_reporting(0);
+ini_set('display_errors', 0);
+
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
@@ -14,6 +18,20 @@ $required = ['email','password','firstName','lastName','birthDate','gender','cit
 foreach ($required as $field) {
     if (empty($data[$field])) errorResponse("Champ $field requis");
 }
+
+// Convertir les valeurs enum de l'anglais au français
+$genderMap = ['male' => 'homme', 'female' => 'femme', 'other' => 'autre'];
+$lookingForMap = ['meeting' => 'rencontres', 'discussion' => 'discussion', 'serious' => 'histoire sérieuse'];
+$childMap = ['yes' => 'oui', 'no' => 'non', 'maybe' => 'peut-être plus tard'];
+$alcoholMap = ['never' => 'jamais', 'occasionally' => 'occasionnellement', 'often' => 'souvent'];
+$smokeMap = ['never' => 'jamais', 'occasionally' => 'occasionnellement', 'often' => 'souvent'];
+
+// Convertir les valeurs
+$data['gender'] = $genderMap[$data['gender']] ?? $data['gender'];
+$data['looking_for'] = $lookingForMap[$data['looking_for']] ?? ($data['looking_for'] ?? 'rencontres');
+$data['enfant'] = $childMap[$data['enfant']] ?? ($data['enfant'] ?? 'non');
+$data['alcool'] = $alcoholMap[$data['alcool']] ?? ($data['alcool'] ?? 'occasionnellement');
+$data['cigarette'] = $smokeMap[$data['cigarette']] ?? ($data['cigarette'] ?? 'jamais');
 
 $db = (new Database())->getConnection();
 
@@ -42,11 +60,11 @@ $stmt->execute([
     $data['secretQuestion'],
     $hashed_secret,
     $data['emploi'] ?? null,
-    $data['looking_for'] ?? 'rencontres',
+    $data['looking_for'],
     $data['taille'] ?? null,
-    $data['enfant'] ?? 'non',
-    $data['alcool'] ?? 'occasionnellement',
-    $data['cigarette'] ?? 'jamais',
+    $data['enfant'],
+    $data['alcool'],
+    $data['cigarette'],
     $data['sexualite'] ?? null,
     $data['animaux'] ?? null,
     $data['centre_interet'] ?? null
